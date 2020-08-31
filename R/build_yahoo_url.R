@@ -8,7 +8,7 @@
 #'
 #' @return tbl_df with cols ticker, page and url
 #'
-build_yahoo_url <- function(tickers, type = c("price", "is", "bs", "cf"), start_date = NULL, end_date = NULL) {
+build_yahoo_url <- function(tickers, type = c("price", "IS", "BS", "CFS"), start_date = NULL, end_date = NULL) {
 
   ticker_list <- list()
 
@@ -18,9 +18,9 @@ build_yahoo_url <- function(tickers, type = c("price", "is", "bs", "cf"), start_
     bs_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/balance-sheet?p={ticker}")
     cf_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/cash-flow?p={ticker}")
 
-    url_tbl <- tibble::tibble(is = is_url,
-                              bs = bs_url,
-                              cf = cf_url)
+    url_tbl <- tibble::tibble(IS = is_url,
+                              BS = bs_url,
+                              CFS = cf_url)
 
     if("price" %in% type) {
       assertR::assert_true(!is.null(start_date), "When requesting price data, you must specify a start date")

@@ -8,8 +8,24 @@ Authors@R:
            email = "cesairetobias@hotmail.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: Return price and financial statement data for companies by scraping the web.
+Depends:
+    R (>= 4.0.0)
+Imports:
+    anytime,
+    assertR,
+    dateR,
+    dplyr,
+    glue,
+    purrr,
+    stringr,
+    tibble,
+    tidyr,
+    webdriver,
+    webScrapeR
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
+Suggests: 
+    testthat

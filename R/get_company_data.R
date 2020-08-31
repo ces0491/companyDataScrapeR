@@ -5,9 +5,9 @@
 #'
 #' @return a data.frame
 #'
-get_company_data_single <- function(tickers, type = c("is", "bs", "cfs", "price")) {
+get_company_data_single <- function(tickers, type) {
 
-  assertR::assert_present(c("is", "bs", "cfs", "price"), type, "check that you specified the financial statement type correctly")
+  assertR::assert_present(type, c("price", "IS", "BS", "CFS"), "You've specified an unsupported type")
 
   # split ticker vector between source prefix and actual ticker
   unq_tickers <- unique(tickers)
@@ -25,16 +25,15 @@ get_company_data_single <- function(tickers, type = c("is", "bs", "cfs", "price"
 
   # retrieve data from yahoo finance and/or investing.com
   if (length(yah_tkrs) > 0) {
-    message("retrieving data from Yahoo Finance...")
+    message("Attempting to retrieve data from Yahoo Finance...")
     yahoo_data <- get_yahoo_data()
     assertR::assert_present(names(yahoo_data), c("date", "ticker"))
   } else {
     yahoo_data <- NULL
   }
 
-  # retrieve data from yahoo finance and/or investing.com
   if (length(inv_tkrs) > 0) {
-    message("retrieving data from Investing.com...")
+    message("Attempting to retrieve data from Investing.com...")
     invcom_data <- get_invcom_data()
     assertR::assert_present(names(invcom_data), c("date", "ticker"))
   } else {
@@ -44,6 +43,8 @@ get_company_data_single <- function(tickers, type = c("is", "bs", "cfs", "price"
   # combine data
   all_co_data <- yahoo_data %>%
     dplyr::bind_rows(invcom_data)
+
+  dupes_tmp <- assertR::assert_duplicates(tickers)
 
   dupes <- tickers[which(duplicated(tickers))]
   dupes_str <- paste(dupes, collapse = "','")
@@ -56,15 +57,15 @@ get_company_data_single <- function(tickers, type = c("is", "bs", "cfs", "price"
   all_co_data
 }
 
-#' Get financial statement data from Yahoo, Investing.com or the SEC
+#' Get financial statement data from Yahoo Finance or Investing.com
 #'
-#' @param tickers character vector of tickers - preferably isins for morningstar data, with the relevent prefix for SEC or MS data
-#' @param type character vector indicating which financial statements to retrieve
+#' @param tickers character vector of tickers with the relevant prefix for the data source, e.g. 'YAH-'
+#' @param type character vector indicating which data type to retrieve
 #'
-#' @return tibble with cols, date, ticker, type and nested company data
+#' @return object of class \code{tbl_df} with columns, date, ticker, type and nested company data
 #' @export
 #'
-get_company_data <- function(tickers, type = c("is", "bs", "cfs", "price")) {
+get_company_data <- function(tickers, type = c("price", "IS", "BS", "CFS")) {
 
   all_fs_data <- tibble::tibble(date = as.Date(character()), ticker = character(), statement = character(), fs_data = list())
 
