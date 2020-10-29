@@ -1,68 +1,101 @@
-#' navigate to ticker page in investing.com
+#' Navigate to the ticker home page from the investing.com home page
 #'
-#' @param pjs_session
-#' @param tkr
+#' @param pjs_session phantom.js session
+#' @param home_url investing.com home url
+#' @param ticker string indicating the ticker
 #'
-#' @return
-#'
-navigate_invcom_ticker <- function(pjs_session, tkr) {
+navigate_ticker_home <- function(pjs_session, home_url, ticker) {
 
-  pjs_session$go("https://za.investing.com/") # always start from the home page
+  pjs_session$go(home_url)
 
-  # enter ticker in searchbox and hit return
-  searchElem <- pjs_session$findElement(xpath = "/html/body/div[5]/header/div[1]/div/div[3]/div[1]/input")
-  searchElem$click()
-  searchElem$sendKeys(tkr, webdriver::key$enter)
+  search_elem <- pjs_session$findElement(xpath = '/html/body/div[5]/header/div[1]/div/div[3]/div[1]/input')
+  search_elem$click()
+  search_elem$sendKeys(ticker, webdriver::key$enter)
 
-  # select the first element from the list of outputs
-  tkrElem <- pjs_session$findElement(xpath = '//*[@id="js-main-container"]/section[1]/div/section/div/section[1]/section/div/div/div/a[1]')
-  tkrElem$click()
+  ticker_elem <- pjs_session$findElement(xpath = '//*[@id="fullColumn"]/div/div[2]/div[2]/div[1]/a/span[2]')
+  ticker_elem$click()
 
-  return(tkrElem)
-
+  pjs_session
 }
 
-#' Title
-#'
-#' @param tickers
-#' @param page
-#' @param frequency
-#' @param start_date
-#' @param end_date
-#'
-#' @return
-#' @export
-#'
-#' @examples
-get_invcom_data <- function(tickers, type = c("is", "bs", "cf", "price"), start_date = NULL, end_date = NULL, frequency = NULL) {
 
-  pjs_conn <- webScrapeR::connect_session("https://za.investing.com/")
-  pjs_session <- pjs_conn$session
+#' scrape Investing.com Finance data
+#'
+#' @param pjs_session phantom.js session
+#' @param ticker_tbl tbl_df with ticker, page and url
+#' @param start_date start date for price data retrieval
+#' @param end_date end date for price data retrieval
+#'
+#' @return object of class \code{list} named by each url specific to a ticker-type combination containing scraped data
+#'
+get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) {
+
+  invcom_home <- pjs_session$getUrl()
+
+  assertR::assert_true(invcom_home == "https://uk.investing.com/")
+  assertR::assert_present(names(ticker_tbl), c("ticker", "type"))
 
   invcom_data_list <- list()
-  for (tkr in tickers) {
 
-    tkrElem <- navigate_invcom_ticker(pjs_session, tkr)
+  for (ticker in  ticker_tbl$ticker) {
 
-    # get data from overview page
-    overviewDataElem <- tkrElem$findElement(css = '#js-main-container > section.main-container.container > div > section > div.e-instrument-data-and-forecast.grid-2-1 > section.common-data.show-more.clean.desktop-show-all.js-show-more > dl')
-    overview_data <- overviewDataElem$getText()
+    pjs_session <- navigate_ticker_home(pjs_session, invcom_home, ticker)
 
-    overview_raw <- stringr::str_split(overview_data[[1]], "\\n+")[[1]]
+    t <- which(tickers == ticker)
+    progress <- round(t/length(tickers), 2) * 100
+    print(glue::glue("Attempting to retrieve {ticker_tbl$type[[t]]} data for {ticker_tbl$ticker[[t]]} from Investing.com..."))
 
-    assertR::assert_present(overview_raw, c("Open", "Shares Outstanding"))
+    if("price" %in% ticker_tbl$type[[t]]) {
 
-    overview_mx <- matrix(overview_Raw[1:36], nrow = 9, ncol = 4, byrow = TRUE)
+      scraped_data <- get_invcom_price_data(pjs_session, start_date, end_date)
 
-    # get data from financials page
-    financialsElem <- tkrElem$findElement(xpath = '//*[@id="js-main-container"]/section[1]/div/header/div/div[3]/nav/ul/li[6]/a')
-    financialsElem$click()
+    } else {
 
-    invcom_data_list[[tkr]] <- overview_mx
+      scraped_data <- get_invcom_fs_data(pjs_session, type = ticker_tbl$type[[t]])
+    }
 
-    pjs_conn$pjs_process$kill()
+    print(glue::glue("{progress}% complete"))
+
+    invcom_data_list[[url]] <- scraped_data
 
   }
 
   invcom_data_list
+
+}
+
+#' Get Investing.com data
+#'
+#' @param tickers character vector
+#' @param type character vector
+#' @param start_date date
+#' @param end_date date
+#' @param frequency string
+#'
+#' @return tbl_df
+#' @export
+#'
+get_invcom_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start_date = NULL, end_date = NULL, frequency = NULL) {
+
+  home <- "https://uk.investing.com/"
+
+  ticker_tbl <- data.frame(ticker = tickers) %>%
+    tidyr::expand(ticker, type)
+
+  pjs_conn <- webScrapeR::connect_session(home)
+  pjs_session <- pjs_conn$session
+
+  invcom_data_list <- get_invcom_data_list(pjs_session, ticker_tbl, start_date, end_date)
+
+  pjs_conn$pjs_process$kill()
+
+  invcom_data <- invcom_data_list %>%
+    tibble::enframe(name = "ticker", value = "scraped_data") %>%
+    dplyr::left_join(ticker_tbl, by = "ticker") %>%
+    dplyr::group_by(ticker) %>%
+    dplyr::mutate(clean_data = purrr::map(scraped_data, clean_invcom_data, type, frequency)) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(ticker, type, scraped_data, clean_data)
+
+  invcom_data
 }

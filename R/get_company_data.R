@@ -70,7 +70,7 @@ get_company_data <- function(tickers, type = c("price", "IS", "BS", "CFS")) {
   all_fs_data <- tibble::tibble(date = as.Date(character()), ticker = character(), statement = character(), fs_data = list())
 
   for(t in type) {
-    print(glue::glue("retrieving {t} data..."))
+    print(glue::glue("Retrieving {t} data..."))
     single_co_data <- get_company_data_single(tickers, type = t)
     all_co_data <- dplyr::bind_rows(all_co_data, single_co_data)
   }
