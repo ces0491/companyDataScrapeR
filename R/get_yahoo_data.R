@@ -50,6 +50,8 @@ get_yahoo_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) {
 #' @param end_date end date for price data retrieval. Default NULL assumes no price data.
 #'
 #' @return object of class \code{tbl_df} with ticker, type, nested data.frame of scraped data and nested data.frame of tidy scraped data
+#'
+#' @importFrom magrittr %>%
 #' @export
 #'
 get_yahoo_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start_date = NULL, end_date = NULL, frequency = NULL) {

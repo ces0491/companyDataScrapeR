@@ -24,7 +24,7 @@ get_yahoo_data(
 \item{frequency}{string indicating the frequency of data to retrieve (if retrieving price data)}
 }
 \value{
-object of class \code {tbl_df} with ticker, type, nested data.frame of scraped data and nested data.frame of tidy scraped data
+object of class \code{tbl_df} with ticker, type, nested data.frame of scraped data and nested data.frame of tidy scraped data
 }
 \description{
 get tidy yahoo data

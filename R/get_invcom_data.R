@@ -12,7 +12,7 @@ navigate_ticker_home <- function(pjs_session, home_url, ticker) {
   search_elem$click()
   search_elem$sendKeys(ticker, webdriver::key$enter)
 
-  ticker_elem <- pjs_session$findElement(xpath = '//*[@id="fullColumn"]/div/div[2]/div[2]/div[1]/a/span[2]')
+  ticker_elem <- pjs_session$findElement(xpath = '//*[@id="fullColumn"]/div/div[2]/div[2]/div[1]/a')
   ticker_elem$click()
 
   pjs_session
@@ -37,13 +37,14 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
 
   invcom_data_list <- list()
 
-  for (ticker in  ticker_tbl$ticker) {
+  tickers <- ticker_tbl$ticker
+  for (ticker in  tickers) {
 
     pjs_session <- navigate_ticker_home(pjs_session, invcom_home, ticker)
 
     t <- which(tickers == ticker)
     progress <- round(t/length(tickers), 2) * 100
-    print(glue::glue("Attempting to retrieve {ticker_tbl$type[[t]]} data for {ticker_tbl$ticker[[t]]} from Investing.com..."))
+    print(glue::glue("Attempting to retrieve {ticker_tbl$type[[t]]} data for {tickers[[t]]} from Investing.com..."))
 
     if("price" %in% ticker_tbl$type[[t]]) {
 
@@ -56,7 +57,7 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
 
     print(glue::glue("{progress}% complete"))
 
-    invcom_data_list[[url]] <- scraped_data
+    invcom_data_list[[ticker]] <- scraped_data
 
   }
 
@@ -73,6 +74,8 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
 #' @param frequency string
 #'
 #' @return tbl_df
+#'
+#' @importFrom magrittr %>%
 #' @export
 #'
 get_invcom_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start_date = NULL, end_date = NULL, frequency = NULL) {

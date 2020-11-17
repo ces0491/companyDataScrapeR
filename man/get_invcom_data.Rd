@@ -6,7 +6,7 @@
 \usage{
 get_invcom_data(
   tickers,
-  type = c("is", "bs", "cf", "price"),
+  type = c("price", "IS", "BS", "CFS"),
   start_date = NULL,
   end_date = NULL,
   frequency = NULL

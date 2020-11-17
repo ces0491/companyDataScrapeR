@@ -4,12 +4,24 @@
 \alias{get_company_data}
 \title{Get financial statement data from Yahoo Finance or Investing.com}
 \usage{
-get_company_data(tickers, type = c("price", "IS", "BS", "CFS"))
+get_company_data(
+  tickers,
+  type = c("price", "IS", "BS", "CFS"),
+  start_date = NULL,
+  end_date = NULL,
+  frequency = NULL
+)
 }
 \arguments{
 \item{tickers}{character vector of tickers with the relevant prefix for the data source, e.g. 'YAH-'}
 
 \item{type}{character vector indicating which data type to retrieve}
+
+\item{start_date}{start date}
+
+\item{end_date}{end date}
+
+\item{frequency}{string indicating the frequency to return price data, e.g. 'monthly'}
 }
 \value{
 object of class \code{tbl_df} with columns, date, ticker, type and nested company data

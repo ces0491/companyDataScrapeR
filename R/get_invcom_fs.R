@@ -4,6 +4,8 @@
 #' @param type string indicating the financial statement required. one of 'IS', 'BS' or 'CFS'
 #'
 #' @return tbl_df
+#'
+#' @importFrom magrittr %>%
 #' @export
 #'
 get_invcom_fs_data <- function(pjs_session, type) {
@@ -21,6 +23,8 @@ get_invcom_fs_data <- function(pjs_session, type) {
   # we want annual financial statements
   annual_btn <- pjs_session$findElement(xpath = '//*[@id="leftColumn"]/div[8]/div[1]/a[1]')
   annual_btn$click()
+
+  pjs_session$waitFor('ExpectedConditions.visibilityOfElementLocated(By.id("rrtable"))')
 
   tbl_elem <- pjs_session$findElement(xpath = '//*[@id="rrtable"]/table')
   tbl_raw <- tbl_elem$getText()

@@ -2,4 +2,7 @@
 
 export(get_company_data)
 export(get_invcom_data)
+export(get_invcom_fs_data)
+export(get_invcom_price_data)
 export(get_yahoo_data)
+importFrom(magrittr,"%>%")

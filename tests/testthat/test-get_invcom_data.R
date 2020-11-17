@@ -1,10 +1,10 @@
-test_that("get data from Yahoo Finance", {
+test_that("get data from Investing.com", {
 
   tickers <- c("GOOG", "AFTJ")
   type_fs <- c("IS", "BS", "CFS")
-  start_date <- "2020/07/01"
-  end_date <- "2020/07/31"
-  frequency <- "weekly"
+  start_date <- "2020/07/31"
+  end_date <- "2020/10/31"
+  frequency <- "monthly"
 
   test_file_fin <- "expected_financials_invcom.rds"
   test_file_price <- "expected_price_invcom.rds"
