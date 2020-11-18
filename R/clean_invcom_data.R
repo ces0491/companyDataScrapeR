@@ -7,8 +7,8 @@
 #'
 clean_invcom_price <- function(scraped_price_data, frequency) {
 
-  assertR::assert_true(class(scraped_price_data) == "data.frame", "logic error")
-  assertR::assert_true(length(scraped_price_data) == 1, "logic error")
+  assertR::assert_true(class(scraped_price_data) == "data.frame", "logic error - scraped price data needs to be a data.frame")
+  assertR::assert_true(length(scraped_price_data) == 1, "logic error - only one data.frame at a time")
   assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency)
 
   reqd_cols <- c('Price', 'Open', 'High', 'Low')
@@ -51,6 +51,36 @@ clean_invcom_price <- function(scraped_price_data, frequency) {
 #'
 clean_invcom_fs <- function(scraped_fs_data, type) {
 
+  dt_header <- scraped_fs_data[1:8, ][c(1,3,5,7)]
+  dt_header <- stringr::str_extract(dt_header, '[0-9]+')
+  n_data_cols <- length(dt_header)
+
+  fs_df <- scraped_fs_data %>%
+    dplyr::rename("all_string" = 1) %>%
+    dplyr::filter(dplyr::row_number() > 8) %>%
+    dplyr::mutate(variable = gsub('[0-9]+', "", all_string)) %>%
+    dplyr::mutate(variable = gsub('\\.', "", variable)) %>%
+    dplyr::mutate(variable = gsub('-', "", variable)) %>%
+    dplyr::mutate(variable = trimws(variable, "both")) %>%
+    dplyr::mutate(value = gsub("[aA-zZ]", "", all_string)) %>%
+    dplyr::mutate(value = trimws(value, "both")) %>%
+    dplyr::mutate(value = stringr::str_split(value, " ")) %>%
+    dplyr::mutate(value = gsub("[^[:alnum:][:blank:]+\\.-]", "", value)) %>%
+    dplyr::mutate(value = gsub("c", "", value)) %>%
+    dplyr::mutate(value = gsub(".  ", "", value)) %>%
+    dplyr::mutate(value = trimws(value, "both")) %>%
+    dplyr::mutate(value = gsub('^- ',"",value)) %>%
+    tidyr::separate(value, dt_header, " ", remove = FALSE) %>%
+    dplyr::select(-all_string, -value)
+
+  assertR::assert_true(length(fs_df) == n_data_cols + 1, "check number of columns being produced in fs_df vs available columns from investing.com")
+
+  fs_df_long <- fs_df %>%
+    tidyr::gather(year, value, -variable) %>%
+    dplyr::mutate(value = as.numeric(value))
+
+  fs_df_long
+
 }
 
 #' clean Investing.com data
@@ -63,7 +93,7 @@ clean_invcom_fs <- function(scraped_fs_data, type) {
 #'
 clean_invcom_data <- function(scraped_data, type, ...) {
 
-  assertR::assert_true(length(type) == 1, "logic error")
+  assertR::assert_true(length(type) == 1, "logic error - only one type at a time")
 
   if("price" %in% type) {
     clean_df <- clean_invcom_price(scraped_data, frequency)

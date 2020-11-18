@@ -7,7 +7,7 @@
 #'
 clean_yahoo_price <- function(scraped_price_data, frequency) {
 
-  assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency, "check that you specified the frequency correctly")
+  assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency)
   assertR::assert_true(length(scraped_price_data) == 1, "logic error")
 
   if(grepl("Date", scraped_price_data[[1]][1])) {
@@ -135,7 +135,7 @@ clean_yahoo_data <- function(scraped_data, type, ...) {
   assertR::assert_true(length(type) == 1, "logic error")
 
   if("price" %in% type) {
-    assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency, "check that you specified the frequency correctly")
+    assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency)
     clean_df <- clean_yahoo_price(scraped_data, frequency)
   } else {
     clean_df <- clean_yahoo_fs(scraped_data, type)

@@ -10,7 +10,7 @@
 #'
 get_company_data_single <- function(tickers, type, start_date, end_date, frequency) {
 
-  assertR::assert_present(type, c("price", "IS", "BS", "CFS"), "You've specified an unsupported type")
+  assertR::assert_present(c("price", "IS", "BS", "CFS"), type)
 
   # split ticker vector between source prefix and actual ticker
   unq_tickers <- unique(tickers)
@@ -30,7 +30,7 @@ get_company_data_single <- function(tickers, type, start_date, end_date, frequen
   if (length(yah_tkrs) > 0) {
     message("Attempting to retrieve data from Yahoo Finance...")
     yahoo_data <- get_yahoo_data(yah_tkrs, type, start_date, end_date, frequency)
-    assertR::assert_present(names(yahoo_data), c("date", "ticker"))
+    assertR::assert_present(names(invcom_data), c("ticker", "type", "scraped_data", "clean_data"))
   } else {
     yahoo_data <- NULL
   }
@@ -38,7 +38,7 @@ get_company_data_single <- function(tickers, type, start_date, end_date, frequen
   if (length(inv_tkrs) > 0) {
     message("Attempting to retrieve data from Investing.com...")
     invcom_data <- get_invcom_data(inv_tkrs, type, start_date, end_date, frequency)
-    assertR::assert_present(names(invcom_data), c("date", "ticker"))
+    assertR::assert_present(names(invcom_data), c("ticker", "type", "scraped_data", "clean_data"))
   } else {
     invcom_data <- NULL
   }
@@ -77,11 +77,11 @@ get_company_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), star
 
   assertR::assert_true(all(grepl("-", tickers)), "Check your tickers - Remember to specify a prefix to indicate the data source")
 
-  all_fs_data <- tibble::tibble(date = as.Date(character()), ticker = character(), statement = character(), fs_data = list())
+  all_co_data <- tibble::tibble(ticker = character(), type = character(), scraped_data = list(), clean_data = list())
 
-  for(t in type) {
+  for(ticker in tickers) {
     print(glue::glue("Retrieving {t} data..."))
-    single_co_data <- get_company_data_single(tickers, type = t, start_date, end_date, frequency)
+    single_co_data <- get_company_data_single(ticker, type, start_date, end_date, frequency)
     all_co_data <- dplyr::bind_rows(all_co_data, single_co_data)
   }
 

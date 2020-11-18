@@ -30,34 +30,35 @@ navigate_ticker_home <- function(pjs_session, home_url, ticker) {
 #'
 get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) {
 
-  invcom_home <- pjs_session$getUrl()
+  invcom_home <- "https://uk.investing.com/"
 
-  assertR::assert_true(invcom_home == "https://uk.investing.com/")
   assertR::assert_present(names(ticker_tbl), c("ticker", "type"))
+
+  tickers <- ticker_tbl$ticker
+  types <- ticker_tbl$type
+  assertR::assert_true(length(tickers) == length(types))
 
   invcom_data_list <- list()
 
-  tickers <- ticker_tbl$ticker
-  for (ticker in  tickers) {
+    for (n in 1:nrow(ticker_tbl)) {
 
-    pjs_session <- navigate_ticker_home(pjs_session, invcom_home, ticker)
+    pjs_session <- navigate_ticker_home(pjs_session, invcom_home, tickers[[n]])
 
-    t <- which(tickers == ticker)
-    progress <- round(t/length(tickers), 2) * 100
-    print(glue::glue("Attempting to retrieve {ticker_tbl$type[[t]]} data for {tickers[[t]]} from Investing.com..."))
+    progress <- round(n/nrow(ticker_tbl), 2) * 100
+    print(glue::glue("Attempting to retrieve {types[[n]]} data for {tickers[[n]]} from Investing.com..."))
 
-    if("price" %in% ticker_tbl$type[[t]]) {
+    if("price" %in% types[[n]]) {
 
       scraped_data <- get_invcom_price_data(pjs_session, start_date, end_date)
 
     } else {
 
-      scraped_data <- get_invcom_fs_data(pjs_session, type = ticker_tbl$type[[t]])
+      scraped_data <- get_invcom_fs_data(pjs_session, type = types[[n]])
     }
 
     print(glue::glue("{progress}% complete"))
 
-    invcom_data_list[[ticker]] <- scraped_data
+    invcom_data_list[[tickers[[n]]]] <- scraped_data
 
   }
 
@@ -80,13 +81,11 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
 #'
 get_invcom_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start_date = NULL, end_date = NULL, frequency = NULL) {
 
-  home <- "https://uk.investing.com/"
+  pjs_conn <- webScrapeR::connect_session("https://uk.investing.com/")
+  pjs_session <- pjs_conn$session
 
   ticker_tbl <- data.frame(ticker = tickers) %>%
     tidyr::expand(ticker, type)
-
-  pjs_conn <- webScrapeR::connect_session(home)
-  pjs_session <- pjs_conn$session
 
   invcom_data_list <- get_invcom_data_list(pjs_session, ticker_tbl, start_date, end_date)
 
@@ -95,7 +94,7 @@ get_invcom_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
   invcom_data <- invcom_data_list %>%
     tibble::enframe(name = "ticker", value = "scraped_data") %>%
     dplyr::left_join(ticker_tbl, by = "ticker") %>%
-    dplyr::group_by(ticker) %>%
+    dplyr::group_by(ticker, type) %>%
     dplyr::mutate(clean_data = purrr::map(scraped_data, clean_invcom_data, type, frequency)) %>%
     dplyr::ungroup() %>%
     dplyr::select(ticker, type, scraped_data, clean_data)
