@@ -16,8 +16,6 @@ test_that("get company data works as expected", {
 
   expected <- readRDS(src_file)
 
-
-
   testthat::expect_equal(test, expected)
 
 })

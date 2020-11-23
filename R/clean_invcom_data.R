@@ -21,7 +21,6 @@ clean_invcom_price <- function(scraped_price_data, frequency) {
     dplyr::mutate(price_str = stringr::str_replace_all(all_string, date_str, "")) %>%
     tidyr::separate(price_str, into = headers[2:7], sep = "\\s") %>%
     dplyr::select(date_str, dplyr::all_of(reqd_cols)) %>%
-    tidyr::drop_na() %>%
     dplyr::mutate(day = substr(date_str, 5, 6)) %>%
     dplyr::mutate(month = substr(date_str, 1, 3)) %>%
     dplyr::mutate(year = substr(date_str, 9, 12)) %>%
@@ -34,8 +33,9 @@ clean_invcom_price <- function(scraped_price_data, frequency) {
     dplyr::group_by(variable) %>%
     dplyr::arrange(date, .by_group = TRUE) %>%
     dplyr::ungroup() %>%
+    tidyr::drop_na() %>%
     dplyr::mutate(value = gsub(",", "", value)) %>%
-    dplyr::mutate(value = as.numeric(value))
+    dplyr::mutate(value = suppressWarnings(as.numeric(value))) # strings will be used to denote missing values so they will be converted to NA. we know this so ignore
 
   price_data_tbl <- dateR::to_period(price_df_long, frequency)
 
@@ -77,7 +77,7 @@ clean_invcom_fs <- function(scraped_fs_data, type) {
 
   fs_df_long <- fs_df %>%
     tidyr::gather(year, value, -variable) %>%
-    dplyr::mutate(value = as.numeric(value))
+    dplyr::mutate(value = suppressWarnings(as.numeric(value))) # there will be dashes from the raw data to denote missing values. these should be NA so ignore warning
 
   fs_df_long
 

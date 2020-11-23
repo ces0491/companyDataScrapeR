@@ -12,6 +12,8 @@ navigate_ticker_home <- function(pjs_session, home_url, ticker) {
   search_elem$click()
   search_elem$sendKeys(ticker, webdriver::key$enter)
 
+  Sys.sleep(1)
+
   ticker_elem <- pjs_session$findElement(xpath = '//*[@id="fullColumn"]/div/div[2]/div[2]/div[1]/a')
   ticker_elem$click()
 
@@ -42,7 +44,9 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
 
     for (n in 1:nrow(ticker_tbl)) {
 
-    pjs_session <- navigate_ticker_home(pjs_session, invcom_home, tickers[[n]])
+    unq <- paste(ticker_tbl$ticker[[n]], ticker_tbl$type[[n]], sep = '_')
+
+    pjs_session <- navigate_ticker_home(pjs_session, invcom_home, tickers[[n]]) # shouldn't need to do this each time if ticker is the same
 
     progress <- round(n/nrow(ticker_tbl), 2) * 100
     print(glue::glue("Attempting to retrieve {types[[n]]} data for {tickers[[n]]} from Investing.com..."))
@@ -58,7 +62,7 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
 
     print(glue::glue("{progress}% complete"))
 
-    invcom_data_list[[tickers[[n]]]] <- scraped_data
+    invcom_data_list[[unq]] <- scraped_data
 
   }
 
@@ -92,8 +96,8 @@ get_invcom_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
   pjs_conn$pjs_process$kill()
 
   invcom_data <- invcom_data_list %>%
-    tibble::enframe(name = "ticker", value = "scraped_data") %>%
-    dplyr::left_join(ticker_tbl, by = "ticker") %>%
+    tibble::enframe(name = "id", value = "scraped_data") %>%
+    tidyr::separate(id, c("ticker", "type")) %>%
     dplyr::group_by(ticker, type) %>%
     dplyr::mutate(clean_data = purrr::map(scraped_data, clean_invcom_data, type, frequency)) %>%
     dplyr::ungroup() %>%

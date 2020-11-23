@@ -6,10 +6,14 @@
 #' @param end_date end date
 #' @param frequency string indicating the frequency to return price data, e.g. 'monthly'
 #'
-#' @return a data.frame
+#' @return object of class \code{tbl_df} with columns, date, ticker, type and nested company data
 #'
-get_company_data_single <- function(tickers, type, start_date, end_date, frequency) {
+#' @importFrom magrittr %>% %$%
+#' @export
+#'
+get_company_data <- function(tickers, type, start_date, end_date, frequency) {
 
+  assertR::assert_true(all(grepl("-", tickers)), "Check your tickers - Remember to specify a prefix to indicate the data source")
   assertR::assert_present(c("price", "IS", "BS", "CFS"), type)
 
   # split ticker vector between source prefix and actual ticker
@@ -26,11 +30,13 @@ get_company_data_single <- function(tickers, type, start_date, end_date, frequen
     dplyr::filter(d_source == "INV") %$%
     ticker
 
+  all_co_data <- tibble::tibble(ticker = character(), type = character(), scraped_data = list(), clean_data = list())
+
   # retrieve data from yahoo finance and/or investing.com
   if (length(yah_tkrs) > 0) {
     message("Attempting to retrieve data from Yahoo Finance...")
     yahoo_data <- get_yahoo_data(yah_tkrs, type, start_date, end_date, frequency)
-    assertR::assert_present(names(invcom_data), c("ticker", "type", "scraped_data", "clean_data"))
+    assertR::assert_present(names(yahoo_data), c("ticker", "type", "scraped_data", "clean_data"))
   } else {
     yahoo_data <- NULL
   }
@@ -44,7 +50,8 @@ get_company_data_single <- function(tickers, type, start_date, end_date, frequen
   }
 
   # combine data
-  all_co_data <- yahoo_data %>%
+  all_co_data <- all_co_data %>%
+    dplyr::bind_rows(yahoo_data) %>%
     dplyr::bind_rows(invcom_data)
 
   dupes_tmp <- assertR::assert_duplicates(tickers)
@@ -55,34 +62,6 @@ get_company_data_single <- function(tickers, type, start_date, end_date, frequen
 
   if (length(dupes) > 0) {
     warning(glue::glue("The following duplicate values were found in argument 'tickers' and were removed: {dupes_str}"))
-  }
-
-  all_co_data
-}
-
-#' Get financial statement data from Yahoo Finance or Investing.com
-#'
-#' @param tickers character vector of tickers with the relevant prefix for the data source, e.g. 'YAH-'
-#' @param type character vector indicating which data type to retrieve
-#' @param start_date start date
-#' @param end_date end date
-#' @param frequency string indicating the frequency to return price data, e.g. 'monthly'
-#'
-#' @return object of class \code{tbl_df} with columns, date, ticker, type and nested company data
-#'
-#' @importFrom magrittr %>%
-#' @export
-#'
-get_company_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start_date = NULL, end_date = NULL, frequency = NULL) {
-
-  assertR::assert_true(all(grepl("-", tickers)), "Check your tickers - Remember to specify a prefix to indicate the data source")
-
-  all_co_data <- tibble::tibble(ticker = character(), type = character(), scraped_data = list(), clean_data = list())
-
-  for(ticker in tickers) {
-    print(glue::glue("Retrieving {t} data..."))
-    single_co_data <- get_company_data_single(ticker, type, start_date, end_date, frequency)
-    all_co_data <- dplyr::bind_rows(all_co_data, single_co_data)
   }
 
   all_co_data
