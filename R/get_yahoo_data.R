@@ -68,7 +68,7 @@ get_yahoo_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start_
   yahoo_data <- yahoo_data_list %>%
     tibble::enframe(name = "url", value = "scraped_data") %>%
     dplyr::left_join(ticker_tbl, by = "url") %>%
-    dplyr::group_by(url) %>%
+    dplyr::group_by(ticker, type) %>%
     dplyr::mutate(clean_data = purrr::map(scraped_data, clean_yahoo_data, type, frequency)) %>%
     dplyr::ungroup() %>%
     dplyr::select(ticker, type, scraped_data, clean_data)

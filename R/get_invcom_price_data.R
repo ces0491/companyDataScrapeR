@@ -7,7 +7,6 @@
 #' @return tbl_df
 #'
 #' @importFrom magrittr %>%
-#' @export
 #'
 get_invcom_price_data <- function(pjs_session, start_dt, end_dt) {
 

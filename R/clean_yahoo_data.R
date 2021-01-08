@@ -74,6 +74,8 @@ clean_yahoo_fs <- function(scraped_fs_data, type) {
       dplyr::mutate(raw2 = gsub("TTM", "", raw)) %>%
       dplyr::mutate(month = sub("\\/.*", "", raw2)) %>%
       dplyr::mutate(month = ifelse(grepl("TTM", split_1), as.numeric(format(Sys.Date(), "%m"))-1, month)) %>%
+      dplyr::mutate(year = ifelse(month == 0, as.numeric(format(Sys.Date(), "%Y"))-1, year)) %>% # if the current date is Jan, the prev line sets month to 0 not 12
+      dplyr::mutate(month = ifelse(month == 0, 12, month)) %>% # we need to go back to the last month of the previous year not month 0 or the last month of the current year
       dplyr::mutate(day = 1) %>%
       tidyr::unite(date_str, year,month,day, sep = "-") %>%
       dplyr::mutate(date = dateR::get_eom_dates(as.Date(date_str))) %>%

@@ -6,7 +6,6 @@
 #' @return tbl_df
 #'
 #' @importFrom magrittr %>%
-#' @export
 #'
 get_invcom_fs_data <- function(pjs_session, type) {
 
