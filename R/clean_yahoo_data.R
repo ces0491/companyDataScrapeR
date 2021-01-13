@@ -23,6 +23,7 @@ clean_yahoo_price <- function(scraped_price_data, frequency) {
       dplyr::mutate(val_str = substring(raw, 14)) %>%
       dplyr::mutate(value = strsplit(val_str, " ")) %>%
       tidyr::unnest(value) %>%
+      dplyr::mutate(value = ifelse(value == "-", 0, value)) %>%
       dplyr::mutate(value = gsub(",", "", value)) %>%
       dplyr::filter(stringr::str_detect(value, "\\d+")) %>%
       dplyr::mutate(value = as.numeric(value)) %>%
@@ -38,9 +39,9 @@ clean_yahoo_price <- function(scraped_price_data, frequency) {
       tidyr::gather(variable, value, -date) %>%
       dplyr::mutate(value = ifelse(value >= 10, value / 100, value)) %>% # some values are quoted in cents while others in the currency unit
       dplyr::mutate(value = ifelse(value < 10, value * 100, value)) %>%
-      dplyr::mutate(variable = stringr::str_remove_all(variable, "[^[:alnum:]]")) # remove special characters like *
-
-    price_data_tbl <- dateR::to_period(price_data_tbl, frequency)
+      dplyr::mutate(variable = stringr::str_remove_all(variable, "[^[:alnum:]]")) %>% # remove special characters like *
+      dateR::to_period(., frequency) %>%
+      tibble::tibble()
 
   } else {
     price_data_tbl <- tibble::tibble(date = as.Date(NA), variable = as.character(NA), value = as.numeric(NA))
