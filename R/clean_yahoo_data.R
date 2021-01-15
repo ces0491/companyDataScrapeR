@@ -40,8 +40,8 @@ clean_yahoo_price <- function(scraped_price_data, frequency) {
       dplyr::mutate(value = ifelse(value >= 10, value / 100, value)) %>% # some values are quoted in cents while others in the currency unit
       dplyr::mutate(value = ifelse(value < 10, value * 100, value)) %>%
       dplyr::mutate(variable = stringr::str_remove_all(variable, "[^[:alnum:]]")) %>% # remove special characters like *
-      dateR::to_period(., frequency) %>%
-      tibble::tibble()
+      dateR::to_period(., frequency) %>% # convert frequency
+      tibble::tibble(.) # convert df to tibble
 
   } else {
     price_data_tbl <- tibble::tibble(date = as.Date(NA), variable = as.character(NA), value = as.numeric(NA))
@@ -129,13 +129,13 @@ clean_yahoo_fs <- function(scraped_fs_data, type) {
 #'
 #' @param scraped_data tbl_df of scraped data
 #' @param type string indicating the data type, e.g. 'IS'
-#' @param ... arguments to other methods
+#' @param frequency string
 #'
 #' @return tbl_df
 #'
-clean_yahoo_data <- function(scraped_data, type, ...) {
+clean_yahoo_data <- function(scraped_data, type, frequency = NULL) {
 
-  assertR::assert_true(length(type) == 1, "logic error")
+  assertR::assert_true(length(type) == 1, "logic error - only one type at a time")
 
   if("price" %in% type) {
     assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency)

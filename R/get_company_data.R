@@ -6,7 +6,7 @@
 #' @param end_date end date
 #' @param frequency string indicating the frequency to return price data, e.g. 'monthly'
 #'
-#' @return object of class \code{tbl_df} with columns, date, ticker, type and nested company data
+#' @return object of class \code{tbl_df} with columns, ticker, type and nested raw and clean company data
 #'
 #' @importFrom magrittr %>% %$%
 #' @export

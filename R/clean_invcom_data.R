@@ -87,15 +87,16 @@ clean_invcom_fs <- function(scraped_fs_data, type) {
 #'
 #' @param scraped_data tbl_df of scraped data
 #' @param type string indicating the data type, e.g. 'IS'
-#' @param ... arguments to other methods
+#' @param frequency string
 #'
 #' @return tbl_df
 #'
-clean_invcom_data <- function(scraped_data, type, ...) {
+clean_invcom_data <- function(scraped_data, type, frequency = NULL) {
 
   assertR::assert_true(length(type) == 1, "logic error - only one type at a time")
 
   if("price" %in% type) {
+    assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency)
     clean_df <- clean_invcom_price(scraped_data, frequency)
   } else {
     clean_df <- clean_invcom_fs(scraped_data, type)
