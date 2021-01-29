@@ -9,6 +9,7 @@
 #'
 get_invcom_fs_data <- function(pjs_session, type) {
 
+  assertR::assert_true(!is.null(pjs_session), "No phantom.js session detected. Please check connection or ensure ticker navigation is correct")
   assertR::assert_true(length(type) == 1, 'logic error - only specify 1 type at a time')
 
   fin_data_elem <- pjs_session$findElement(linkText = 'Financials')

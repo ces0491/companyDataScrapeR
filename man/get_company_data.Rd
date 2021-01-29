@@ -18,7 +18,7 @@ get_company_data(tickers, type, start_date, end_date, frequency)
 \item{frequency}{string indicating the frequency to return price data, e.g. 'monthly'}
 }
 \value{
-object of class \code{tbl_df} with columns, date, ticker, type and nested company data
+object of class \code{tbl_df} with columns, ticker, type and nested raw and clean company data
 }
 \description{
 Get company data from Yahoo Finance or Investing.com

@@ -14,8 +14,16 @@ navigate_ticker_home <- function(pjs_session, home_url, ticker) {
 
   Sys.sleep(1)
 
-  ticker_elem <- pjs_session$findElement(xpath = '//*[@id="fullColumn"]/div/div[2]/div[2]/div[1]/a')
-  ticker_elem$click()
+  pjs_session <- tryCatch(
+    {
+      ticker_elem <- pjs_session$findElement(xpath = '//*[@id="fullColumn"]/div/div[2]/div[2]/div[1]/a')
+      ticker_elem$click()
+    },
+    error = function(e) {
+      message(glue::glue("Could not find {ticker} on Investing.com"))
+      return(NULL)
+    }
+  )
 
   pjs_session
 }
@@ -32,7 +40,8 @@ navigate_ticker_home <- function(pjs_session, home_url, ticker) {
 #'
 get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) {
 
-  invcom_home <- "https://uk.investing.com/"
+  #invcom_home <- "https://uk.investing.com/"
+  invcom_home <- pjs_session$getURL()
 
   assertR::assert_present(names(ticker_tbl), c("ticker", "type"))
 
@@ -47,6 +56,7 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
     unq <- paste(ticker_tbl$ticker[[n]], ticker_tbl$type[[n]], sep = '_')
 
     pjs_session <- navigate_ticker_home(pjs_session, invcom_home, tickers[[n]]) # shouldn't need to do this each time if ticker is the same
+    assertR::assert_true(!is.null(pjs_session), "No phantom.js session detected. Please check connection or ensure ticker navigation is correct")
 
     progress <- round(n/nrow(ticker_tbl), 2) * 100
     print(glue::glue("Attempting to retrieve {types[[n]]} data for {tickers[[n]]} from Investing.com..."))

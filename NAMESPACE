@@ -2,6 +2,7 @@
 
 export(get_company_data)
 export(get_invcom_data)
+export(get_ticker_id)
 export(get_yahoo_data)
 importFrom(magrittr,"%$%")
 importFrom(magrittr,"%>%")

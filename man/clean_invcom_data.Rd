@@ -4,14 +4,14 @@
 \alias{clean_invcom_data}
 \title{clean Investing.com data}
 \usage{
-clean_invcom_data(scraped_data, type, ...)
+clean_invcom_data(scraped_data, type, frequency = NULL)
 }
 \arguments{
 \item{scraped_data}{tbl_df of scraped data}
 
 \item{type}{string indicating the data type, e.g. 'IS'}
 
-\item{...}{arguments to other methods}
+\item{frequency}{string}
 }
 \value{
 tbl_df

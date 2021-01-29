@@ -10,6 +10,7 @@
 #'
 get_invcom_price_data <- function(pjs_session, start_dt, end_dt) {
 
+  assertR::assert_true(!is.null(pjs_session), "No phantom.js session detected. Please check connection or ensure ticker navigation is correct")
   assertR::assert_true(!is.null(start_dt), "Attempting to retrieve price data from Investing.com, please specify a start date")
 
   start_dt <- as.character(format(as.Date(start_dt), "%d/%m/%Y"))
