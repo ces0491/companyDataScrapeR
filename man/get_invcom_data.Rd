@@ -13,18 +13,18 @@ get_invcom_data(
 )
 }
 \arguments{
-\item{tickers}{character vector}
+\item{tickers}{character vector of investing.com tickers}
 
-\item{type}{character vector}
+\item{type}{character vector specifying the type of data required - price, income statement, balance sheet and/or cash flow statement}
 
 \item{start_date}{date}
 
 \item{end_date}{date}
 
-\item{frequency}{string}
+\item{frequency}{string indicating the frequency of data to return - required for price data}
 }
 \value{
-tbl_df
+tbl_df with cols ticker, type, scraped_data and clean_data
 }
 \description{
 Get Investing.com data

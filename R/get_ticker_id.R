@@ -10,14 +10,13 @@
 #'
 get_ticker_id <- function(ticker_id) {
 
-  url <- "https://uk.investing.com/"
-  pjs_conn <- webScrapeR::connect_session(url)
+  pjs_conn <- webScrapeR::connect_session("https://uk.investing.com/")
   pjs_session <- pjs_conn$session
-  pjs_session <- navigate_ticker_home(pjs_session, url, ticker_id)
+  pjs_session <- navigate_ticker_home(pjs_session, ticker_id)
 
   assertR::assert_true(!is.null(pjs_session), "No phantom.js session detected")
 
-  name_elem <- pjs_session$findElement(xpath = '//*[@id="leftColumn"]/div[1]')
+  name_elem <- pjs_session$findElement(xpath = '//*[@id="leftColumn"]/div[1]/h1')
   ticker_name <- name_elem$getText()
 
   gen_elem <- pjs_session$findElement(xpath = '//*[@id="quotes_summary_current_data"]/div[2]')
@@ -26,11 +25,8 @@ get_ticker_id <- function(ticker_id) {
   pjs_conn$pjs_process$kill()
 
   # clean
-
-  name_split <- strsplit(ticker_name, "\n", fixed = TRUE)[[1]]
-  name_raw <- name_split[1]
-  ticker <- stringr::str_extract_all(name_raw,  "(?<=\\().+?(?=\\))")[[1]] # extract string in parentheses
-  name <- stringr::str_remove(name_raw, ticker)
+  ticker <- stringr::str_extract_all(ticker_name,  "(?<=\\().+?(?=\\))")[[1]] # extract string in parentheses
+  name <- stringr::str_remove(ticker_name, ticker)
   name <- stringr::str_sub(name, end = -4) # remove last 3 characters - parentheses and space
 
   info_split <- strsplit(general_info, "\n", fixed = TRUE)[[1]]

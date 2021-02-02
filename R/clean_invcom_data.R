@@ -97,10 +97,13 @@ clean_invcom_data <- function(scraped_data, type, frequency = NULL) {
 
   if("price" %in% type) {
     assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency)
-    clean_df <- clean_invcom_price(scraped_data, frequency)
-  } else {
-    clean_df <- clean_invcom_fs(scraped_data, type)
   }
+
+  clean_df <- switch(type,
+                     price = clean_invcom_price(scraped_data, frequency),
+                     IS = clean_invcom_fs(scraped_data, type),
+                     BS = clean_invcom_fs(scraped_data, type),
+                     CFS = clean_invcom_fs(scraped_data, type))
 
   clean_df
 }

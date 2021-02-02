@@ -7,13 +7,13 @@
 #'
 #' @importFrom magrittr %>%
 #'
-get_invcom_fs_data <- function(pjs_session, type) {
+pvt_get_invcom_fs_data <- function(pjs_session, type) {
 
-  assertR::assert_true(!is.null(pjs_session), "No phantom.js session detected. Please check connection or ensure ticker navigation is correct")
   assertR::assert_true(length(type) == 1, 'logic error - only specify 1 type at a time')
 
-  fin_data_elem <- pjs_session$findElement(linkText = 'Financials')
-  fin_data_elem$click()
+  type <- toupper(type)
+
+  try(pjs_session$findElement(linkText = 'Financials')$click(), silent = TRUE) # if you can't find the linked text, its probably already been selected
 
   xpath <- dplyr::case_when(type == "IS" ~ '//*[@id="pairSublinksLevel2"]/li[2]/a',
                             type == "BS" ~ '//*[@id="pairSublinksLevel2"]/li[3]/a',
@@ -36,4 +36,22 @@ get_invcom_fs_data <- function(pjs_session, type) {
 
   fs_df
 
+}
+
+#' get financial statement data from investing.com
+#'
+#' @param pjs_session phantom.js session
+#' @param type string indicating the financial statement required. one of 'IS', 'BS' or 'CFS'
+#'
+#' @return tbl_df
+#'
+get_invcom_fs_data <- function(pjs_session, type) {
+
+  if(is.null(pjs_session)) {
+    fs_df <- NA
+  } else {
+    fs_df <- pvt_get_invcom_fs_data(pjs_session, type)
+  }
+
+  fs_df
 }
