@@ -25,6 +25,20 @@ navigate_ticker_home <- function(pjs_session, ticker) {
   pjs_session
 }
 
+#' private function to navigate home and return the ticker's meta data
+#'
+#' @param pjs_session phantom.js session
+#' @param ticker string
+#'
+#' @return data.frame of meta data associated with the ticker
+#'
+pvt_get_meta <- function(pjs_session, ticker) {
+  print(glue::glue("Navigating to {ticker} home..."))
+  pjs_session <- navigate_ticker_home(pjs_session, ticker)
+  print(glue::glue("Attempting to retrieve meta data for {ticker} from Investing.com..."))
+  meta <- get_invcom_meta_data(pjs_session)
+  meta
+}
 
 #' scrape Investing.com Finance data
 #'
@@ -48,12 +62,14 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
     type <- ticker_tbl$type[[i]]
 
     if(i == 1) {
-      pjs_session <- navigate_ticker_home(pjs_session, ticker = ticker)
+      meta  <- pvt_get_meta(pjs_session, ticker)
     } else {
       if(i > 1 & ticker != ticker_tbl$ticker[[i - 1]]) {
-        pjs_session <- navigate_ticker_home(pjs_session, ticker = ticker)
+        meta  <- pvt_get_meta(pjs_session, ticker)
       }
     }
+
+    invcom_data_list[[paste0(ticker, "_meta")]] <- meta
 
     print(glue::glue("Attempting to retrieve {type} data for {ticker} from Investing.com..."))
 
@@ -61,8 +77,7 @@ get_invcom_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) 
                            price = get_invcom_price_data(pjs_session, start_date, end_date),
                            IS = get_invcom_fs_data(pjs_session, type),
                            BS = get_invcom_fs_data(pjs_session, type),
-                           CFS = get_invcom_fs_data(pjs_session, type),
-                           meta = get_invcom_meta_data(pjs_session))
+                           CFS = get_invcom_fs_data(pjs_session, type))
 
     progress <- round(i/nrow(ticker_tbl), 2) * 100
     print(glue::glue("{progress}% complete"))
@@ -94,7 +109,10 @@ get_invcom_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
   pjs_session <- pjs_conn$session
 
   ticker_tbl <- data.frame(ticker = tickers) %>%
-    tidyr::expand(ticker, type = c(type, "meta")) %>% # we always want to return the meta data regardless of the other types called
+    tidyr::expand(ticker, type = c(type)) %>%
+    dplyr::group_by(ticker) %>%
+    dplyr::arrange(desc(type), .by_group = TRUE) %>% # hack to make price first - think of better way to enforce order or make order irrelevent
+    dplyr::ungroup() %>%
     tidyr::unite("id", c("ticker", "type"), sep = "_", remove = FALSE)
 
   invcom_data_list <- get_invcom_data_list(pjs_session, ticker_tbl, start_date, end_date)

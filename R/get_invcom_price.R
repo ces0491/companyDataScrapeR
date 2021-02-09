@@ -16,8 +16,11 @@ pvt_get_invcom_price_data <- function(pjs_session, start_dt, end_dt) {
   if(is.null(end_dt)) end_dt <- Sys.Date()
   end_dt <- as.character(format(as.Date(end_dt), "%d/%m/%Y"))
 
+  # clickable links always have href as an attribute. If not clickable, we are already on the page
   gen_data_elem <- pjs_session$findElement(xpath = '//*[@id="pairSublinksLevel1"]/li[1]')
-  gen_data_elem$click()
+  if(!is.null(gen_data_elem$getAttribute('href'))) {
+    gen_data_elem$click()
+  }
 
   hist_data_elem <- pjs_session$findElement(xpath = '//*[@id="pairSublinksLevel2"]/li[3]/a')
   hist_data_elem$click()

@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_invcom_meta.R
 \name{get_invcom_meta_data}
 \alias{get_invcom_meta_data}
-\title{Get meta data for security from investing.com}
+\title{get ticker meta data from investing.com}
 \usage{
 get_invcom_meta_data(pjs_session)
 }
@@ -10,8 +10,8 @@ get_invcom_meta_data(pjs_session)
 \item{pjs_session}{phantom.js session}
 }
 \value{
-data.frame with columns variable of class character and value of class character
+tbl_df
 }
 \description{
-Get meta data for security from investing.com
+get ticker meta data from investing.com
 }
