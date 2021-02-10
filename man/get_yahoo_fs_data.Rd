@@ -4,10 +4,12 @@
 \alias{get_yahoo_fs_data}
 \title{get financial statement data from Yahoo}
 \usage{
-get_yahoo_fs_data(pjs_session)
+get_yahoo_fs_data(pjs_session, url)
 }
 \arguments{
 \item{pjs_session}{phantom.js session}
+
+\item{url}{string specifying the url for the financial statement of interest}
 }
 \value{
 single column tbl of raw scraped text data

@@ -1,10 +1,13 @@
 #' get price data from Yahoo
 #'
 #' @param pjs_session phantom.js session
+#' @param url string specifying the url for the price data and its relevant parameters
 #'
 #' @return single column tbl of raw scraped text data
 #'
-get_yahoo_price_data <- function(pjs_session) {
+get_yahoo_price_data <- function(pjs_session, url) {
+
+  pjs_session <- pjs_session$go(url)
 
   # scroll to bottom of page
   for(i in 1:55) {

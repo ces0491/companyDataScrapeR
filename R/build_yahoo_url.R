@@ -4,7 +4,7 @@
 #' @param tickers character vector of stock tickers following Yahoo Finance format i.e. JSE tickers have .JO suffix
 #' @param type character vector indicating which types of data you require.
 #' @param start_date start date for price data retrieval. Default NULL assumes no price data.
-#' @param end_date end date for price data retrieval. Default NULL assumes no price data.
+#' @param end_date end date for price data retrieval. Default NULL assumes current date.
 #'
 #' @return tbl_df with cols ticker, page and url
 #'
@@ -17,17 +17,20 @@ build_yahoo_url <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
     is_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/financials?p={ticker}")
     bs_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/balance-sheet?p={ticker}")
     cf_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/cash-flow?p={ticker}")
+    meta_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/key-statistics?p={ticker}")
 
     url_tbl <- tibble::tibble(IS = is_url,
                               BS = bs_url,
-                              CFS = cf_url)
+                              CFS = cf_url,
+                              meta = meta_url)
 
     if("price" %in% type) {
       assertR::assert_true(!is.null(start_date), "When requesting price data, you must specify a start date")
-      assertR::assert_true(!is.null(end_date), "When requesting price data, you must specify an end date")
       assertR::assert_true(start_date < end_date, "start date is after end date")
 
       start_dt_epoch <- as.integer(as.POSIXct(start_date), tz = anytime:::getTZ())
+
+      if(is.null(end_date)) end_date <- Sys.Date()
       end_dt_epoch <- as.integer(as.POSIXct(end_date), tz = anytime:::getTZ())
 
       # we always assume a daily frequency in our query so that we can convert ourselves using dateR
@@ -41,7 +44,7 @@ build_yahoo_url <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
     ticker_list[[ticker]] <- url_tbl
   }
 
-  req_type <- type
+  req_type <- c(type, "meta")
 
   ticker_tbl <- ticker_list %>%
     tibble::enframe(name = "ticker", value = "url") %>%

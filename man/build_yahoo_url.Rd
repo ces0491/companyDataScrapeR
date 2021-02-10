@@ -18,7 +18,7 @@ build_yahoo_url(
 
 \item{start_date}{start date for price data retrieval. Default NULL assumes no price data.}
 
-\item{end_date}{end date for price data retrieval. Default NULL assumes no price data.}
+\item{end_date}{end date for price data retrieval. Default NULL assumes current date.}
 }
 \value{
 tbl_df with cols ticker, page and url

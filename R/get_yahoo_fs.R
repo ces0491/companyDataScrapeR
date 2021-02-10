@@ -1,10 +1,13 @@
 #' get financial statement data from Yahoo
 #'
 #' @param pjs_session phantom.js session
+#' @param url string specifying the url for the financial statement of interest
 #'
 #' @return single column tbl of raw scraped text data
 #'
-get_yahoo_fs_data <- function(pjs_session) {
+get_yahoo_fs_data <- function(pjs_session, url) {
+
+  pjs_session <- pjs_session$go(url)
 
   fs_tbl_elem <- try(pjs_session$findElement(xpath = '//*[@id="Col1-1-Financials-Proxy"]/section/div[4]/div[1]/div[1]'), silent = TRUE)
 

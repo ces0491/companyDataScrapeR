@@ -11,26 +11,24 @@ get_yahoo_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) {
 
   assertR::assert_present(names(ticker_tbl), c("url", "type"))
 
-  urls <- ticker_tbl$url
   yahoo_data_list <- list()
 
-  for (url in urls) {
+  for (i in 1:nrow(ticker_tbl)) {
 
-    u <- which(urls == url)
-    progress <- round(u/length(urls), 2) * 100
-    print(glue::glue("Attempting to retrieve {ticker_tbl$type[[u]]} data for {ticker_tbl$ticker[[u]]} from Yahoo Finance..."))
+    url <- ticker_tbl$url[[i]]
+    ticker <- ticker_tbl$ticker[[i]]
+    type <- ticker_tbl$type[[i]]
 
-    if("price" %in% ticker_tbl$type[[u]]) {
+    print(glue::glue("Attempting to retrieve {type} data for {ticker} from Yahoo Finance..."))
 
-      pjs_session$go(ticker_tbl$url[[u]])
-      scraped_data <- get_yahoo_price_data(pjs_session)
+    scraped_data <- switch(type,
+                           price = get_yahoo_price_data(pjs_session, url),
+                           IS = get_yahoo_fs_data(pjs_session, url),
+                           BS = get_yahoo_fs_data(pjs_session, url),
+                           CFS = get_yahoo_fs_data(pjs_session, url),
+                           meta = get_yahoo_meta_data(pjs_session, url))
 
-    } else {
-
-      pjs_session$go(ticker_tbl$url[[u]])
-      scraped_data <- get_yahoo_fs_data(pjs_session)
-    }
-
+    progress <- round(i/nrow(ticker_tbl), 2) * 100
     print(glue::glue("{progress}% complete"))
 
     yahoo_data_list[[url]] <- scraped_data

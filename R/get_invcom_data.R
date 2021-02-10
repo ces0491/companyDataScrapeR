@@ -130,12 +130,4 @@ get_invcom_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
 
   invcom_data
 
-  # meta_data <- invcom_data %>%
-  #   dplyr::filter(type == "meta") %>%
-  #   tidyr::unnest(scraped_data) %>%
-  #   dplyr::filter(variable == "name") %>%
-  #   dplyr::select(ticker, name = value)
-  #
-  # result <- meta_data %>%
-  #   dplyr::left_join(invcom_data, by = "ticker")
 }
