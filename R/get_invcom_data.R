@@ -5,7 +5,7 @@
 #'
 navigate_ticker_home <- function(pjs_session, ticker) {
 
-  search_elem <- pjs_session$findElement(xpath = '/html/body/div[5]/header/div[1]/div/div[3]/div[1]/input')
+  search_elem <- pjs_session$findElement(xpath = '/html/body/div[5]/header/div[2]/div/div[3]/div[1]/input')
   search_elem$click()
   search_elem$sendKeys(ticker, webdriver::key$enter)
 

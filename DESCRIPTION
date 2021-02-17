@@ -15,6 +15,7 @@ Imports:
     assertR,
     dateR,
     dplyr,
+    fileR,
     glue,
     magrittr,
     purrr,

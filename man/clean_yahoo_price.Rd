@@ -2,7 +2,7 @@
 % Please edit documentation in R/clean_yahoo_data.R
 \name{clean_yahoo_price}
 \alias{clean_yahoo_price}
-\title{clean price data table from Yahoo}
+\title{clean price data from Yahoo}
 \usage{
 clean_yahoo_price(scraped_price_data, frequency)
 }
@@ -15,5 +15,5 @@ clean_yahoo_price(scraped_price_data, frequency)
 object of class \code{tbl_df} with date, variable and value
 }
 \description{
-clean price data table from Yahoo
+clean price data from Yahoo
 }

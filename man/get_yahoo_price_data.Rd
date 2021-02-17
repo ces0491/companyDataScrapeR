@@ -4,15 +4,13 @@
 \alias{get_yahoo_price_data}
 \title{get price data from Yahoo}
 \usage{
-get_yahoo_price_data(pjs_session, url)
+get_yahoo_price_data(url)
 }
 \arguments{
-\item{pjs_session}{phantom.js session}
-
-\item{url}{string specifying the url for the price data and its relevant parameters}
+\item{url}{string specifying the download link for the price data}
 }
 \value{
-single column tbl of raw scraped text data
+tbl_df with columns, Date, Open, High, Low, Close, Adj.Close, Volume
 }
 \description{
 get price data from Yahoo

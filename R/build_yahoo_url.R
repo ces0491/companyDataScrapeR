@@ -34,8 +34,10 @@ build_yahoo_url <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
       end_dt_epoch <- as.integer(as.POSIXct(end_date), tz = anytime:::getTZ())
 
       # we always assume a daily frequency in our query so that we can convert ourselves using dateR
+      # "https://finance.yahoo.com/quote/{ticker}/history?period1={start_dt_epoch}&period2={end_dt_epoch}&interval=1d&filter=history&frequency=1d"
       price_tbl <- tibble::tibble(price = glue::glue(
-        "https://finance.yahoo.com/quote/{ticker}/history?period1={start_dt_epoch}&period2={end_dt_epoch}&interval=1d&filter=history&frequency=1d"))
+        "https://query1.finance.yahoo.com/v7/finance/download/{ticker}?period1={start_dt_epoch}&period2={end_dt_epoch}&interval=1d&events=history&includeAdjustedClose=true.csv"
+        ))
 
       url_tbl <- price_tbl %>%
         dplyr::bind_cols(url_tbl)

@@ -1,37 +1,27 @@
 #' get price data from Yahoo
 #'
-#' @param pjs_session phantom.js session
-#' @param url string specifying the url for the price data and its relevant parameters
+#' @param url string specifying the download link for the price data
 #'
-#' @return single column tbl of raw scraped text data
+#' @return tbl_df with columns, Date, Open, High, Low, Close, Adj.Close, Volume
 #'
-get_yahoo_price_data <- function(pjs_session, url) {
+get_yahoo_price_data <- function(url) {
 
-  pjs_session <- pjs_session$go(url)
+  download_dir <- glue::glue("C:/temp/chromeDL/yahoo_price_data")
+  dir.create(download_dir, recursive = TRUE, showWarnings = FALSE)
 
-  # scroll to bottom of page
-  for(i in 1:55) {
-    webElem <- pjs_session$findElement(css = "body")
-    webElem$sendKeys(webdriver::key$end)
-    Sys.sleep(1)
-  }
+  destfile <- glue::glue("{download_dir}/temp_yahoo_price.csv") # add extension to file name for path
 
-  price_tbl_elem <- try(webElem$findElement(xpath = '//*[@id="Col1-1-HistoricalDataTable-Proxy"]/section/div[2]/table'), silent = TRUE)
+  tmp_file <- try(utils::download.file(url, destfile, mode = "wb"), silent = TRUE)
 
-  if (inherits(price_tbl_elem, "try-error")) {
-    price_tbl <- tibble::tibble(raw = NA)
+  if (inherits(tmp_file, "try-error")) {
+      price_tbl <- tibble::tibble("Date" = NA, "Open" = NA, "High" = NA, "Low" = NA, "Close" = NA, "Adj.Close" = NA, "Volume" = NA)
 
-  } else {
+    } else {
+      raw_price <- utils::read.csv(destfile, stringsAsFactors = FALSE)
+      price_tbl <- tibble::tibble(raw_price)
 
-    price_tbl_raw <- price_tbl_elem$getText()
-    price_tbl_txt <- unlist(strsplit(price_tbl_raw[[1]], "\n"))
-
-    price_tbl <- tibble::tibble(raw = price_tbl_txt)
-
-  }
+      fileR::clear_files(clear_dir = download_dir, file_name = "temp_yahoo_price.csv") # clearing temp file
+    }
 
   price_tbl
 }
-
-
-

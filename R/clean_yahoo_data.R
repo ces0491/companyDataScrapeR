@@ -1,4 +1,4 @@
-#' clean price data table from Yahoo
+#' clean price data from Yahoo
 #'
 #' @param scraped_price_data tbl_df of scraped data
 #' @param frequency string indicating the frequency to return price data, e.g. 'monthly'
@@ -8,44 +8,27 @@
 clean_yahoo_price <- function(scraped_price_data, frequency) {
 
   assertR::assert_present(c("daily", "weekly", "monthly", "quarterly", "annual"), frequency)
-  assertR::assert_true(length(scraped_price_data) == 1, "logic error")
 
-  if(grepl("Date", scraped_price_data[[1]][1])) {
+  reqd_cols <- c("Date", "Open", "High", "Low", "Close", "Adj.Close", "Volume")
+  assertR::assert_present(names(scraped_price_data), reqd_cols)
 
-    reqd_cols <- c("Open", "High", "Low", "Close*", "Adj Close**", "Volume")
-    sprd_col_names <- paste(1:c(length(reqd_cols)))
+  if(all(is.na(scraped_price_data))) {
 
-    price_data <- scraped_price_data %>%
-      dplyr::slice(-1) %>%
-      dplyr::mutate(date_str = substring(raw, 1, 12)) %>%
-      dplyr::mutate(date_tmp = gsub(",", "", date_str)) %>%
-      dplyr::mutate(date = as.Date(date_tmp, format = "%b %d %Y")) %>%
-      dplyr::mutate(val_str = substring(raw, 14)) %>%
-      dplyr::mutate(value = strsplit(val_str, " ")) %>%
-      tidyr::unnest(value) %>%
-      dplyr::mutate(value = ifelse(value == "-", 0, value)) %>%
-      dplyr::mutate(value = gsub(",", "", value)) %>%
-      dplyr::filter(stringr::str_detect(value, "\\d+")) %>%
-      dplyr::mutate(value = as.numeric(value)) %>%
-      dplyr::group_by(raw) %>%
-      dplyr::mutate(row = dplyr::row_number()) %>%
-      dplyr::ungroup() %>%
-      tidyr::spread(row, value) %>%
-      dplyr::select(date, paste(1:c(length(reqd_cols)))) %>%
-      tidyr::drop_na() %>%
-      dplyr::rename_at(dplyr::all_of(sprd_col_names), ~ reqd_cols)
+    price_data_tbl <- tibble::tibble(date = as.Date(NA), variable = as.character(NA), value = as.numeric(NA))
 
-    price_data_tbl <- price_data %>%
+    } else {
+
+    price_data_tbl <- scraped_price_data %>%
+      dplyr::mutate(Date = as.Date(Date)) %>%
+      dplyr::rename(date = Date) %>%
+      dplyr::rename(AdjClose = Adj.Close) %>%
       tidyr::gather(variable, value, -date) %>%
+      dplyr::mutate(value = as.numeric(value)) %>%
       dplyr::mutate(value = ifelse(value >= 10, value / 100, value)) %>% # some values are quoted in cents while others in the currency unit
       dplyr::mutate(value = ifelse(value < 10, value * 100, value)) %>%
-      dplyr::mutate(variable = stringr::str_remove_all(variable, "[^[:alnum:]]")) %>% # remove special characters like *
       dateR::to_period(., frequency) %>% # convert frequency
-      tibble::tibble(.) # convert df to tibble
-
-  } else {
-    price_data_tbl <- tibble::tibble(date = as.Date(NA), variable = as.character(NA), value = as.numeric(NA))
-  }
+      tibble::as_tibble(.)
+    }
 
   price_data_tbl
 }

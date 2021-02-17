@@ -22,7 +22,7 @@ get_yahoo_data_list <- function(pjs_session, ticker_tbl, start_date, end_date) {
     print(glue::glue("Attempting to retrieve {type} data for {ticker} from Yahoo Finance..."))
 
     scraped_data <- switch(type,
-                           price = get_yahoo_price_data(pjs_session, url),
+                           price = get_yahoo_price_data(url),
                            IS = get_yahoo_fs_data(pjs_session, url),
                            BS = get_yahoo_fs_data(pjs_session, url),
                            CFS = get_yahoo_fs_data(pjs_session, url),
