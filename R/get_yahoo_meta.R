@@ -13,14 +13,23 @@ pvt_get_yahoo_meta_data <- function(pjs_session) {
   gen_info_elem <- pjs_session$findElement(xpath = '//*[@id="quote-header-info"]/div[2]/div[1]/div[2]/span')
   gen_raw <- gen_info_elem$getText()
 
-  mkt_cap_elem <- pjs_session$findElement(xpath = '//*[@id="Col1-0-KeyStatistics-Proxy"]/section/div[2]/div[1]/div/div/div/div/table/tbody/tr[1]')
-  mkt_cap_raw <- mkt_cap_elem$getText()
+  stats_elem <- try(pjs_session$findElement(linkText = 'Statistics'), silent = TRUE)
 
-  shares_elem <- pjs_session$findElement(xpath = '//*[@id="Col1-0-KeyStatistics-Proxy"]/section/div[2]/div[2]/div/div[2]/div/div/table/tbody/tr[3]')
-  shares_raw <- shares_elem$getText()
+  if (inherits(stats_elem, "try-error")) {
+    mkt_cap_raw <- NA
+    shares_raw <- NA
+    beta_raw <- NA
+  } else {
+    stats_elem$click()
+    mkt_cap_elem <- pjs_session$findElement(xpath = '//*[@id="Col1-0-KeyStatistics-Proxy"]/section/div[2]/div[1]/div/div/div/div/table/tbody/tr[1]')
+    mkt_cap_raw <- mkt_cap_elem$getText()
 
-  beta_elem <- pjs_session$findElement(xpath = '//*[@id="Col1-0-KeyStatistics-Proxy"]/section/div[2]/div[2]/div/div[1]/div/div/table/tbody/tr[1]')
-  beta_raw <- beta_elem$getText()
+    shares_elem <- pjs_session$findElement(xpath = '//*[@id="Col1-0-KeyStatistics-Proxy"]/section/div[2]/div[2]/div/div[2]/div/div/table/tbody/tr[3]')
+    shares_raw <- shares_elem$getText()
+
+    beta_elem <- pjs_session$findElement(xpath = '//*[@id="Col1-0-KeyStatistics-Proxy"]/section/div[2]/div[2]/div/div[1]/div/div/table/tbody/tr[1]')
+    beta_raw <- beta_elem$getText()
+  }
 
   # tidy
   ticker <- stringr::str_extract_all(name_raw,  "(?<=\\().+?(?=\\))")[[1]] # extract string in parentheses
@@ -46,13 +55,13 @@ pvt_get_yahoo_meta_data <- function(pjs_session) {
 
   # assemble
 
-  meta_df <- name_df
+  meta_df <- name_df %>%
     dplyr::bind_rows(market_df) %>%
     dplyr::bind_rows(ccy_df) %>%
     dplyr::bind_rows(mkt_cap_df) %>%
     dplyr::bind_rows(shares_df) %>%
     dplyr::bind_rows(beta_df) %>%
-    tibble::tibble(.)
+    tibble::as_tibble(.)
 
   meta_df
 }

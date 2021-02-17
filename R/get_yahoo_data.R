@@ -69,6 +69,7 @@ get_yahoo_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start_
     dplyr::group_by(url) %>%
     dplyr::mutate(clean_data = purrr::map(scraped_data, clean_yahoo_data, type, frequency)) %>%
     dplyr::ungroup() %>%
+    dplyr::mutate(clean_data = ifelse(type == "meta", scraped_data, clean_data)) %>%
     dplyr::select(ticker, type, scraped_data, clean_data)
 
   yahoo_data

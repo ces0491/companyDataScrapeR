@@ -111,7 +111,7 @@ get_invcom_data <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
   ticker_tbl <- data.frame(ticker = tickers) %>%
     tidyr::expand(ticker, type = c(type)) %>%
     dplyr::group_by(ticker) %>%
-    dplyr::arrange(desc(type), .by_group = TRUE) %>% # hack to make price first - think of better way to enforce order or make order irrelevent
+    dplyr::arrange(desc(type), .by_group = TRUE) %>% # hack to make price first - think of better way to enforce order or make order irrelevant
     dplyr::ungroup() %>%
     tidyr::unite("id", c("ticker", "type"), sep = "_", remove = FALSE)
 

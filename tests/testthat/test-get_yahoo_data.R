@@ -26,6 +26,15 @@ test_that("get data from Yahoo Finance", {
   test_price <- get_yahoo_data(tickers, type = "price", start_date, end_date, frequency)
   expected_price <- readRDS(src_price)
 
-  testthat::expect_equal(test_price$clean_data, expected_price$clean_data)
+  test_price_data <- dplyr::filter(test_price, type == 'price')
+  testthat::expect_equal(test_price_data$clean_data, expected_price$clean_data)
+
+  # test meta
+  test_meta <- dplyr::filter(test_price, type == 'meta')
+  test_meta_data <- test_meta$clean_data[[1]]
+
+  testthat::expect_s3_class(test_meta_data, "data.frame")
+  testthat::expect_setequal(names(test_meta_data), c("variable", "value"))
+  testthat::expect_setequal(test_meta_data$variable, c('Market Cap', 'Beta', 'Shares Outstanding', 'Name', 'Currency', 'Market'))
 
 })

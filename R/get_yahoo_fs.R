@@ -9,7 +9,7 @@ get_yahoo_fs_data <- function(pjs_session, url) {
 
   pjs_session <- pjs_session$go(url)
 
-  fs_tbl_elem <- try(pjs_session$findElement(xpath = '//*[@id="Col1-1-Financials-Proxy"]/section/div[4]/div[1]/div[1]'), silent = TRUE)
+  fs_tbl_elem <- try(pjs_session$findElement(xpath = '//*[@id="Col1-1-Financials-Proxy"]/section/div[3]/div[1]'), silent = TRUE) #//*[@id="Col1-1-Financials-Proxy"]/section/div[4]/div[1]/div[1]
 
   if (inherits(fs_tbl_elem, "try-error")) {
     fs_tbl <- tibble::tibble(raw = NA)

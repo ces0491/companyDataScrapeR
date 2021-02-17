@@ -17,7 +17,7 @@ build_yahoo_url <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
     is_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/financials?p={ticker}")
     bs_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/balance-sheet?p={ticker}")
     cf_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/cash-flow?p={ticker}")
-    meta_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}/key-statistics?p={ticker}")
+    meta_url <- glue::glue("https://finance.yahoo.com/quote/{ticker}?p={ticker}&.tsrc=fin-srch")
 
     url_tbl <- tibble::tibble(IS = is_url,
                               BS = bs_url,
@@ -44,13 +44,19 @@ build_yahoo_url <- function(tickers, type = c("price", "IS", "BS", "CFS"), start
     ticker_list[[ticker]] <- url_tbl
   }
 
-  req_type <- c(type, "meta")
+  reqd_fs <- toupper(setdiff(type, c('price', 'meta')))
+
+  if('price' %in% type) {
+    reqd_type <- c(reqd_fs, "price", "meta")
+  } else {
+    reqd_type <- c(reqd_fs, "meta")
+  }
 
   ticker_tbl <- ticker_list %>%
     tibble::enframe(name = "ticker", value = "url") %>%
     tidyr::unnest(url) %>%
     tidyr::gather(type, url, -ticker) %>%
-    dplyr::filter(type %in% req_type)
+    dplyr::filter(type %in% reqd_type)
 
   ticker_tbl
 }

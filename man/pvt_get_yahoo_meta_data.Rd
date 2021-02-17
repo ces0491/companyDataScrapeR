@@ -8,8 +8,6 @@ pvt_get_yahoo_meta_data(pjs_session)
 }
 \arguments{
 \item{pjs_session}{a phantom js session}
-
-\item{url}{string indicating the url for a given tickers key statistics}
 }
 \value{
 tbl_df with columns variable and value, containing the records Name, Market, Currency, Market Cap, Shares Outstanding and Beta
