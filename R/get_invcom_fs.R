@@ -15,11 +15,11 @@ pvt_get_invcom_fs_data <- function(pjs_session, type) {
 
   try(pjs_session$findElement(linkText = 'Financials')$click(), silent = TRUE) # if you can't find the linked text, its probably already been selected
 
-  xpath <- dplyr::case_when(type == "IS" ~ '//*[@id="pairSublinksLevel2"]/li[2]/a',
+  xpath_fs <- dplyr::case_when(type == "IS" ~ '//*[@id="pairSublinksLevel2"]/li[2]/a',
                             type == "BS" ~ '//*[@id="pairSublinksLevel2"]/li[3]/a',
                             type == "CFS" ~ '//*[@id="pairSublinksLevel2"]/li[4]/a')
 
-  fin_st_elem <- pjs_session$findElement(xpath = xpath)
+  fin_st_elem <- pjs_session$findElement(xpath = xpath_fs)
   fin_st_elem$click()
 
   # we want annual financial statements
@@ -32,9 +32,16 @@ pvt_get_invcom_fs_data <- function(pjs_session, type) {
   tbl_elem <- pjs_session$findElement(xpath = '//*[@id="rrtable"]/table')
   tbl_raw <- tbl_elem$getText()
 
-  fs_df <- data.frame(do.call(cbind, strsplit(tbl_raw, "\n", fixed = TRUE)))
+  units_elem <- pjs_session$findElement(xpath = '//*[@id="leftColumn"]/div[10]')
+  units_raw <- units_elem$getText()
 
-  fs_df
+  fs_df <- data.frame(do.call(cbind, strsplit(tbl_raw, "\n", fixed = TRUE))) %>%
+    dplyr::rename(raw_text = 1)
+
+  result <- data.frame(raw_text = units_raw) %>%
+    dplyr::bind_rows(fs_df)
+
+  result
 
 }
 

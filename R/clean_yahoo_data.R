@@ -18,16 +18,21 @@ clean_yahoo_price <- function(scraped_price_data, frequency) {
 
     } else {
 
-    price_data_tbl <- scraped_price_data %>%
+    price_df_long <- scraped_price_data %>%
       dplyr::mutate(Date = as.Date(Date)) %>%
       dplyr::rename(date = Date) %>%
       dplyr::rename(AdjClose = Adj.Close) %>%
       tidyr::gather(variable, value, -date) %>%
       dplyr::mutate(value = as.numeric(value)) %>%
       dplyr::mutate(value = ifelse(value >= 10, value / 100, value)) %>% # some values are quoted in cents while others in the currency unit
-      dplyr::mutate(value = ifelse(value < 10, value * 100, value)) %>%
-      dateR::to_period(., frequency) %>% # convert frequency
-      tibble::as_tibble(.)
+      dplyr::mutate(value = ifelse(value < 10, value * 100, value))
+
+    price_data_tbl <- price_df_long %>%
+      dplyr::group_by(variable) %>%
+      dateR::to_period(., frequency) %>%
+      dplyr::ungroup() %>%
+      tibble::tibble()
+
     }
 
   price_data_tbl

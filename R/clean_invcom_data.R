@@ -37,7 +37,10 @@ clean_invcom_price <- function(scraped_price_data, frequency) {
     dplyr::mutate(value = gsub(",", "", value)) %>%
     dplyr::mutate(value = suppressWarnings(as.numeric(value))) # strings will be used to denote missing values so they will be converted to NA. we know this so ignore
 
-  price_data_tbl <- dateR::to_period(price_df_long, frequency)
+  price_data_tbl <- price_df_long %>%
+    dplyr::group_by(variable) %>%
+    dateR::to_period(., frequency) %>%
+    dplyr::ungroup()
 
   price_data_tbl
 }
@@ -51,18 +54,35 @@ clean_invcom_price <- function(scraped_price_data, frequency) {
 #'
 clean_invcom_fs <- function(scraped_fs_data, type) {
 
-  dt_header <- scraped_fs_data[1:8, ][c(1,3,5,7)]
-  dt_header <- stringr::str_extract(dt_header, '[0-9]+')
-  n_data_cols <- length(dt_header)
+  rep_units <- scraped_fs_data[1, ]
+
+  dt_raw <- scraped_fs_data[2:9, ]
+  dt_txt <- unlist(stringr::str_extract_all(dt_raw, '[0-9]+'))
+
+  dts_list <- list()
+  for(n in 1:12){
+    if(n %% 3 == 1) {
+      dt_sub <- dt_txt[n:(n+2)]
+      dt <- paste(dt_sub, collapse = "/")
+    }
+    dts_list[[n]] <- dt
+  }
+
+  dts <- dts_list %>%
+    tibble::enframe() %>%
+    tidyr::unnest(cols = value) %>%
+    dplyr::distinct(value) %>%
+    dplyr::pull(value)
+
+  n_data_cols <- length(dts)
 
   fs_df <- scraped_fs_data %>%
-    dplyr::rename("all_string" = 1) %>%
-    dplyr::filter(dplyr::row_number() > 8) %>%
-    dplyr::mutate(variable = gsub('[0-9]+', "", all_string)) %>%
+    dplyr::filter(dplyr::row_number() > 9) %>%
+    dplyr::mutate(variable = gsub('[0-9]+', "", raw_text)) %>%
     dplyr::mutate(variable = gsub('\\.', "", variable)) %>%
     dplyr::mutate(variable = gsub('-', "", variable)) %>%
     dplyr::mutate(variable = trimws(variable, "both")) %>%
-    dplyr::mutate(value = gsub("[aA-zZ]", "", all_string)) %>%
+    dplyr::mutate(value = gsub("[aA-zZ]", "", raw_text)) %>%
     dplyr::mutate(value = trimws(value, "both")) %>%
     dplyr::mutate(value = stringr::str_split(value, " ")) %>%
     dplyr::mutate(value = gsub("[^[:alnum:][:blank:]+\\.-]", "", value)) %>%
@@ -70,14 +90,17 @@ clean_invcom_fs <- function(scraped_fs_data, type) {
     dplyr::mutate(value = gsub(".  ", "", value)) %>%
     dplyr::mutate(value = trimws(value, "both")) %>%
     dplyr::mutate(value = gsub('^- ',"",value)) %>%
-    tidyr::separate(value, dt_header, " ", remove = FALSE) %>%
-    dplyr::select(-all_string, -value)
+    tidyr::separate(value, dts, " ", remove = FALSE) %>%
+    dplyr::select(-raw_text, -value)
 
   assertR::assert_true(length(fs_df) == n_data_cols + 1, "check number of columns being produced in fs_df vs available columns from investing.com")
 
   fs_df_long <- fs_df %>%
-    tidyr::gather(year, value, -variable) %>%
-    dplyr::mutate(value = suppressWarnings(as.numeric(value))) # there will be dashes from the raw data to denote missing values. these should be NA so ignore warning
+    tidyr::gather(date, value, -variable) %>%
+    dplyr::mutate(date = as.Date(date, format = "%Y/%d/%m")) %>%
+    dplyr::mutate(value = suppressWarnings(as.numeric(value))) %>%  # there will be dashes from the raw data to denote missing values. these should be NA so ignore warning
+    dplyr::mutate(reporting_units = rep_units) %>%
+    dplyr::select(date, variable, value, reporting_units)
 
   fs_df_long
 
