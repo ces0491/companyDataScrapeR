@@ -16,8 +16,8 @@ pvt_get_invcom_fs_data <- function(pjs_session, type) {
   try(pjs_session$findElement(linkText = 'Financials')$click(), silent = TRUE) # if you can't find the linked text, its probably already been selected
 
   xpath_fs <- dplyr::case_when(type == "IS" ~ '//*[@id="pairSublinksLevel2"]/li[2]/a',
-                            type == "BS" ~ '//*[@id="pairSublinksLevel2"]/li[3]/a',
-                            type == "CFS" ~ '//*[@id="pairSublinksLevel2"]/li[4]/a')
+                               type == "BS" ~ '//*[@id="pairSublinksLevel2"]/li[3]/a',
+                               type == "CFS" ~ '//*[@id="pairSublinksLevel2"]/li[4]/a')
 
   fin_st_elem <- pjs_session$findElement(xpath = xpath_fs)
   fin_st_elem$click()

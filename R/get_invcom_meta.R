@@ -9,7 +9,15 @@ pvt_get_invcom_meta_data <- function(pjs_session) {
   reqd_vars <- c("Beta", "Market Cap", "Shares Outstanding")
 
   # clickable links always have href as an attribute. If not clickable, we are already on the page
-  gen_data_elem <- pjs_session$findElement(xpath = '//*[@id="pairSublinksLevel1"]/li[1]')
+  financials_elem <- pjs_session$findElement(linkText = 'Financials')
+  if(!is.null(financials_elem$getAttribute('href'))) {
+    financials_elem$click()
+  }
+
+  units_elem <- pjs_session$findElement(xpath = '//*[@id="leftColumn"]/div[13]')
+  units_raw <- units_elem$getText()
+
+  gen_data_elem <- pjs_session$findElement(linkText = 'General')
   if(!is.null(gen_data_elem$getAttribute('href'))) {
     gen_data_elem$click()
   }
@@ -46,6 +54,8 @@ pvt_get_invcom_meta_data <- function(pjs_session) {
 
   summ_tbl <- data.frame(do.call(cbind, strsplit(tbl_raw, "\n", fixed = TRUE)))
 
+  rep_units_df <- data.frame(variable = "Reporting Units", value = units_raw)
+
   clean_summ <- summ_tbl %>%
     dplyr::rename(variable = 1) %>%
     dplyr::mutate(reqd_var = variable %in% reqd_vars) %>%
@@ -54,12 +64,17 @@ pvt_get_invcom_meta_data <- function(pjs_session) {
     dplyr::filter(filt) %>%
     dplyr::select(variable)
 
+  order_vec <- c("Name", "Market", "Currency", "Market Cap", "Shares Outstanding", "Beta", "Reporting Units")
+
   meta_df <- clean_summ %>%
     dplyr::mutate(value = dplyr::lead(variable)) %>%
     dplyr::filter(dplyr::row_number() %% 2 == 1) %>% ## Select odd rows
     dplyr::bind_rows(name_df) %>%
     dplyr::bind_rows(fx_df) %>%
-    dplyr::bind_rows(market_df)
+    dplyr::bind_rows(market_df) %>%
+    dplyr::bind_rows(rep_units_df) %>%
+    dplyr::slice(match(order_vec, variable)) %>% # reorder rows according to order vec
+    data.frame(.)
 
   meta_df
 }

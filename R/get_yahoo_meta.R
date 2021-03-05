@@ -31,6 +31,15 @@ pvt_get_yahoo_meta_data <- function(pjs_session) {
     beta_raw <- beta_elem$getText()
   }
 
+  fin_elem <- try(pjs_session$findElement(linkText = 'Financials'), silent = TRUE)
+  if (inherits(stats_elem, "try-error")) {
+    units_raw <- NA
+    } else{
+      fin_elem$click()
+      units_elem <- pjs_session$findElement(xpath = '//*[@id="Col1-1-Financials-Proxy"]/section/div[2]/span/span')
+      units_raw <- units_elem$getText()
+  }
+
   # tidy
   ticker <- stringr::str_extract_all(name_raw,  "(?<=\\().+?(?=\\))")[[1]] # extract string in parentheses
   name <- stringr::str_remove(name_raw, ticker)
@@ -53,6 +62,8 @@ pvt_get_yahoo_meta_data <- function(pjs_session) {
   beta_val <- stringr::str_remove(beta_raw, "Beta \\(5Y Monthly\\) ")
   beta_df <- data.frame(variable = "Beta", value = beta_val)
 
+  units_df <- data.frame(variable = "Reporting Units", value = units_raw)
+
   # assemble
 
   meta_df <- name_df %>%
@@ -61,6 +72,7 @@ pvt_get_yahoo_meta_data <- function(pjs_session) {
     dplyr::bind_rows(mkt_cap_df) %>%
     dplyr::bind_rows(shares_df) %>%
     dplyr::bind_rows(beta_df) %>%
+    dplyr::bind_rows(units_df) %>%
     tibble::as_tibble(.)
 
   meta_df

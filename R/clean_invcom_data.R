@@ -40,7 +40,8 @@ clean_invcom_price <- function(scraped_price_data, frequency) {
   price_data_tbl <- price_df_long %>%
     dplyr::group_by(variable) %>%
     dateR::to_period(., frequency) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    data.frame(.)
 
   price_data_tbl
 }
@@ -54,7 +55,7 @@ clean_invcom_price <- function(scraped_price_data, frequency) {
 #'
 clean_invcom_fs <- function(scraped_fs_data, type) {
 
-  rep_units <- scraped_fs_data[1, ]
+  rep_units <- scraped_fs_data[1, ] # the reporting units are retrieved at the get_fs stage for reference but are not used in the output here
 
   dt_raw <- scraped_fs_data[2:9, ]
   dt_txt <- unlist(stringr::str_extract_all(dt_raw, '[0-9]+'))
@@ -99,8 +100,7 @@ clean_invcom_fs <- function(scraped_fs_data, type) {
     tidyr::gather(date, value, -variable) %>%
     dplyr::mutate(date = as.Date(date, format = "%Y/%d/%m")) %>%
     dplyr::mutate(value = suppressWarnings(as.numeric(value))) %>%  # there will be dashes from the raw data to denote missing values. these should be NA so ignore warning
-    dplyr::mutate(reporting_units = rep_units) %>%
-    dplyr::select(date, variable, value, reporting_units)
+    dplyr::select(date, variable, value)
 
   fs_df_long
 

@@ -18,8 +18,13 @@ get_yahoo_fs_data <- function(pjs_session, url) {
 
     fs_tbl_raw <- fs_tbl_elem$getText()
     fs_tbl_txt <- unlist(strsplit(fs_tbl_raw[[1]], "\n"))
+    fs_df <- data.frame(raw_text = fs_tbl_txt)
 
-    fs_tbl <- tibble::tibble(raw = fs_tbl_txt)
+    units_elem <- pjs_session$findElement(xpath = '//*[@id="Col1-1-Financials-Proxy"]/section/div[2]/span/span')
+    units_raw <- units_elem$getText()
+
+    fs_tbl <- data.frame(raw_text = units_raw) %>%
+      dplyr::bind_rows(fs_df)
   }
 
   fs_tbl

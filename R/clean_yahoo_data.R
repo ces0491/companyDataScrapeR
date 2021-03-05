@@ -53,14 +53,16 @@ clean_yahoo_fs <- function(scraped_fs_data, type) {
 
   } else {
 
+    rep_u <- scraped_fs_data[1,]
+
     dt_tbl <-  scraped_fs_data %>%
-      dplyr::filter(grepl("\\/", raw)) %>%
-      dplyr::mutate(split_1 = strsplit(raw, "\\/")) %>%
+      dplyr::filter(grepl("\\/", raw_text)) %>%
+      dplyr::mutate(split_1 = strsplit(raw_text, "\\/")) %>%
       tidyr::unnest(split_1) %>%
       dplyr::mutate(year = substring(split_1, 1,4)) %>%
       dplyr::mutate(year = ifelse(grepl("TTM", split_1), format(Sys.Date(), "%Y"), year)) %>%
       dplyr::filter(nchar(year) == 4) %>%
-      dplyr::mutate(raw2 = gsub("TTM", "", raw)) %>%
+      dplyr::mutate(raw2 = gsub("TTM", "", raw_text)) %>%
       dplyr::mutate(month = sub("\\/.*", "", raw2)) %>%
       dplyr::mutate(month = ifelse(grepl("TTM", split_1), as.numeric(format(Sys.Date(), "%m"))-1, month)) %>%
       dplyr::mutate(year = ifelse(month == 0, as.numeric(format(Sys.Date(), "%Y"))-1, year)) %>% # if the current date is Jan, the prev line sets month to 0 not 12
@@ -69,17 +71,19 @@ clean_yahoo_fs <- function(scraped_fs_data, type) {
       tidyr::unite(date_str, year,month,day, sep = "-") %>%
       dplyr::mutate(date = dateR::get_eom_dates(as.Date(date_str))) %>%
       dplyr::mutate(col = dplyr::row_number()) %>%
-      dplyr::select(raw, raw2, date, col)
+      dplyr::select(raw_text, raw2, date, col)
 
     cnt_dt <- length(dt_tbl$date)
 
-    # scraped data will always begin with 'Breakdown' (the variable column header) and the dates
+    # scraped data will always begin with the reporting units which we retrieve for reference but don't use in the output,'Breakdown'
+    # (the variable column header) and the dates
     reqd_raw <- scraped_fs_data %>%
-      dplyr::filter(raw != "Breakdown") %>%
-      dplyr::filter(raw != dt_tbl$raw[1])
+      dplyr::filter(dplyr::row_number() != 1,
+                    raw_text != "Breakdown",
+                    raw_text != dt_tbl$raw_text[1])
 
     val_str <- reqd_raw %>%
-      dplyr::mutate(value = stringr::str_split(raw, "(?<!-)\\s")) %>% # split string either on space or a hyphen followed by a space (negative numbers)
+      dplyr::mutate(value = stringr::str_split(raw_text, "(?<!-)\\s")) %>% # split string either on space or a hyphen followed by a space (negative numbers)
       tidyr::unnest(value) %>%
       dplyr::mutate(value = gsub("\\s", "", value)) %>% # remove any spaces that may be left as a result of negative numbers
       dplyr::mutate(value = gsub(",", "", value)) %>%
@@ -90,17 +94,17 @@ clean_yahoo_fs <- function(scraped_fs_data, type) {
 
     val_tbl <- val_str %>%
       dplyr::mutate(value = as.numeric(value)) %>%
-      dplyr::select(raw, value) %>%
-      dplyr::group_by(raw) %>%
+      dplyr::select(raw_text, value) %>%
+      dplyr::group_by(raw_text) %>%
       dplyr::mutate(row = dplyr::row_number()) %>%
       dplyr::ungroup() %>%
       tidyr::spread(row, value) %>% # annoyingly, the values get reordered after the spread so rejoin reqd raw by raw to get the order back
       dplyr::select(1:(cnt_dt + 1))
 
-    fs_data <- dplyr::left_join(reqd_raw, val_tbl, by = "raw") %>%
+    fs_data <- dplyr::left_join(reqd_raw, val_tbl, by = "raw_text") %>%
       tidyr::fill(paste(dt_tbl$col), .direction = "up") %>%
-      dplyr::filter(!(raw %in% val_tbl$raw)) %>%
-      dplyr::rename(variable = raw)
+      dplyr::filter(!(raw_text %in% val_tbl$raw_text)) %>%
+      dplyr::rename(variable = raw_text)
 
     fs_data_tbl <- fs_data %>%
       tidyr::gather(row, value, -variable) %>%
