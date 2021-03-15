@@ -35,6 +35,6 @@ test_that("get data from Yahoo Finance", {
 
   testthat::expect_s3_class(test_meta_data, "data.frame")
   testthat::expect_setequal(names(test_meta_data), c("variable", "value"))
-  testthat::expect_setequal(test_meta_data$variable, c('Market Cap', 'Beta', 'Shares Outstanding', 'Name', 'Currency', 'Market'))
+  testthat::expect_setequal(test_meta_data$variable, c('Market Cap', 'Beta', 'Shares Outstanding', 'Name', 'Currency', 'Market', 'Reporting Units'))
 
 })
